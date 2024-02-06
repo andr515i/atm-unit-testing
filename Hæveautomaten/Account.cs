@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Security.Cryptography;
 
 namespace Hæveautomaten
 {
@@ -10,37 +7,51 @@ namespace Hæveautomaten
 	{
 		private int _id;
 
-		public int Id { get { return _id; } set { if(IsBankEmployee()) _id = value } }
+		public int Id { get { return _id; } set { if (!IsEmployee.IsEmployee.IsBankEmployee(Id)) return; _id = value; } }
 
 		public string AccountName { get; set; }
 
 
-		private short _pinCode;
+		private string _pinCode;
 
-		public short PinCode
+		public string PinCode
 		{
-			get { if (IsBankEmployee()) return _pinCode; return 1234; }
-			set { if (IsBankEmployee()) _pinCode = value; }
+			get { if (IsEmployee.IsEmployee.IsBankEmployee(Id)) return _pinCode; return "error"; }
+			set { if (IsEmployee.IsEmployee.IsBankEmployee(Id)) _pinCode = value; }
 		}
 
 
-		public Account(short pinCode, string accountName)
+		public Account( string accountName)
 		{
 			AccountName = accountName;
-			PinCode = pinCode;
+			PinCode = GenerateRandomPin();
+
+
+		}
+
+
+		private string GenerateRandomPin()
+		{
+
+			byte[] randomBytes = new byte[2];
 
 			
-
-		}
-
-		private bool IsBankEmployee()
-		{
-			if (Id <= 100)
+			using (RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider())
 			{
-				return true;
+				rng.GetBytes(randomBytes);
 			}
-			return false;
+
+			int randomNumber = BitConverter.ToInt16(randomBytes, 0);
+
+			int pin = Math.Abs(randomNumber % 10000);
+
+			string formattedPin = pin.ToString("D4");
+
+			return formattedPin;
+
 		}
+
+
 
 		/// <summary>
 		/// x is the currency that which the user currently has. y is the amount we subtract from the account.
